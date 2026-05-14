@@ -39,55 +39,48 @@
 ---
 
 ## 🏗️ Architecture
+
+```
 zero-trust-network-monitor/
-│
-├── 🐍 backend/                        # Python FastAPI Backend
-│   ├── Dockerfile                     # Container configuration
-│   ├── requirements.txt               # Python dependencies
+├── backend/
+│   ├── Dockerfile
+│   ├── requirements.txt
 │   └── app/
-│       ├── main.py                    # FastAPI app entry point
+│       ├── main.py
 │       ├── api/
-│       │   └── routes.py              # REST endpoints + WebSocket
+│       │   └── routes.py
 │       ├── core/
-│       │   ├── scanner.py             # ARP scanning & packet capture (Scapy)
-│       │   └── database.py            # PostgreSQL connection (SQLAlchemy)
+│       │   ├── scanner.py
+│       │   └── database.py
 │       ├── models/
-│       │   └── device.py              # Device & Incident ORM models
+│       │   └── device.py
 │       └── services/
-│           └── detector.py            # Anomaly detection engine
-│
-├── ⚛️  frontend/                       # React TypeScript Frontend
+│           └── detector.py
+├── frontend/
 │   ├── index.html
-│   ├── vite.config.ts                 # Vite configuration
+│   ├── vite.config.ts
 │   └── src/
-│       ├── App.tsx                    # Main dashboard component
-│       ├── main.tsx                   # React entry point
-│       └── index.css                  # Global styles
-│
-├── 🐳 docker-compose.yml              # PostgreSQL container
-├── .env.example                       # Environment variables template
-├── .gitignore
+│       ├── App.tsx
+│       ├── main.tsx
+│       └── index.css
+├── docker-compose.yml
+├── .env.example
 └── README.md
----
+```
 
 ## 🔄 How It Works
-┌─────────────┐     ARP Broadcast      ┌─────────────────┐
-│   Scapy     │ ──────────────────────▶│   LAN Devices   │
-│  Scanner    │ ◀──────────────────────│  (respond)      │
-└──────┬──────┘                        └─────────────────┘
-│ Device data
-▼
-┌─────────────┐     SQL queries        ┌─────────────────┐
-│  FastAPI    │ ──────────────────────▶│   PostgreSQL    │
-│  Backend    │ ◀──────────────────────│   Database      │
-└──────┬──────┘                        └─────────────────┘
-│ REST + WebSocket
-▼
-┌─────────────┐
-│    React    │
-│  Dashboard  │
-└─────────────┘
----
+
+```mermaid
+graph TD
+    A[Scapy Scanner] -->|ARP Broadcast| B[LAN Devices]
+    B -->|ARP Response| A
+    A -->|Device Data| C[FastAPI Backend]
+    C -->|SQL Queries| D[(PostgreSQL)]
+    D -->|Results| C
+    C -->|REST API| E[React Dashboard]
+    C -->|WebSocket| E
+    E -->|Authorize/Revoke| C
+```
 
 ## 🚀 Getting Started
 

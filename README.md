@@ -1,45 +1,92 @@
 # 🛡️ Zero Trust Network Monitor
 
-![Python](https://img.shields.io/badge/Python-3.11-blue?logo=python)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-green?logo=fastapi)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?logo=postgresql)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
-![Scapy](https://img.shields.io/badge/Scapy-2.5-orange)
+<div align="center">
 
-Real-time network traffic monitor with unauthorized device detection, anomaly alerts, and incident reporting dashboard. Built for cybersecurity portfolio demonstration.
+![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=for-the-badge&logo=fastapi&logoColor=white)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Scapy](https://img.shields.io/badge/Scapy-2.5-FF6B35?style=for-the-badge&logo=python&logoColor=white)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-D71F00?style=for-the-badge&logo=python&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-0.30-499848?style=for-the-badge&logo=gunicorn&logoColor=white)
+![Vite](https://img.shields.io/badge/Vite-5.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)
+![WebSocket](https://img.shields.io/badge/WebSocket-Real--time-010101?style=for-the-badge&logo=socketdotio&logoColor=white)
+![MIT License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+
+**Real-time LAN monitoring tool with unauthorized device detection, anomaly alerts, and incident management dashboard.**
+
+[Features](#-features) • [Architecture](#-architecture) • [Getting Started](#-getting-started) • [API Docs](#-api-endpoints) • [Tech Stack](#-tech-stack)
+
+</div>
 
 ---
 
 ## 🎯 Features
 
-- **ARP Network Scanning** — discovers all active devices on the LAN using Scapy
-- **Zero Trust Device Authorization** — whitelist/blacklist devices by MAC address
-- **Real-time Alerts** — WebSocket-powered instant notifications for new devices
-- **Anomaly Detection** — detects port scans, suspicious ports, and traffic floods
-- **Incident Management** — log, track and resolve security incidents
-- **Multi-interface Support** — scan any network interface (Wi-Fi, Ethernet, etc.)
-- **Live Traffic Chart** — real-time network traffic visualization
-- **REST API** — full FastAPI backend with auto-generated docs at `/docs`
+| Feature | Description |
+|---------|-------------|
+| 📡 **ARP Network Scanning** | Discovers all active devices on the LAN using Scapy raw packets |
+| 🛡️ **Zero Trust Authorization** | Whitelist/blacklist devices by MAC address |
+| ⚡ **Real-time Alerts** | WebSocket-powered instant notifications for new devices |
+| 🔍 **Anomaly Detection** | Detects port scans, suspicious ports (4444, 23, 3389) and traffic floods |
+| 📋 **Incident Management** | Log, track and resolve security incidents with severity levels |
+| 🌐 **Multi-interface Support** | Scan any network interface (Wi-Fi, Ethernet, WSL, etc.) |
+| 📊 **Live Traffic Chart** | Real-time network traffic visualization with Recharts |
+| 📖 **REST API** | Full FastAPI backend with auto-generated Swagger docs |
 
 ---
 
 ## 🏗️ Architecture
 zero-trust-network-monitor/
-├── backend/                  # FastAPI + Scapy
+│
+├── 🐍 backend/                        # Python FastAPI Backend
+│   ├── Dockerfile                     # Container configuration
+│   ├── requirements.txt               # Python dependencies
 │   └── app/
-│       ├── api/routes.py     # REST endpoints + WebSocket
+│       ├── main.py                    # FastAPI app entry point
+│       ├── api/
+│       │   └── routes.py              # REST endpoints + WebSocket
 │       ├── core/
-│       │   ├── scanner.py    # ARP scanning & packet capture
-│       │   └── database.py   # PostgreSQL connection
-│       ├── models/device.py  # SQLAlchemy models
+│       │   ├── scanner.py             # ARP scanning & packet capture (Scapy)
+│       │   └── database.py            # PostgreSQL connection (SQLAlchemy)
+│       ├── models/
+│       │   └── device.py              # Device & Incident ORM models
 │       └── services/
-│           └── detector.py   # Anomaly detection engine
-├── frontend/                 # React + TypeScript
+│           └── detector.py            # Anomaly detection engine
+│
+├── ⚛️  frontend/                       # React TypeScript Frontend
+│   ├── index.html
+│   ├── vite.config.ts                 # Vite configuration
 │   └── src/
-│       └── App.tsx           # Dashboard UI
-├── docker-compose.yml        # PostgreSQL container
-└── .env.example              # Environment variables
+│       ├── App.tsx                    # Main dashboard component
+│       ├── main.tsx                   # React entry point
+│       └── index.css                  # Global styles
+│
+├── 🐳 docker-compose.yml              # PostgreSQL container
+├── .env.example                       # Environment variables template
+├── .gitignore
+└── README.md
+---
+
+## 🔄 How It Works
+┌─────────────┐     ARP Broadcast      ┌─────────────────┐
+│   Scapy     │ ──────────────────────▶│   LAN Devices   │
+│  Scanner    │ ◀──────────────────────│  (respond)      │
+└──────┬──────┘                        └─────────────────┘
+│ Device data
+▼
+┌─────────────┐     SQL queries        ┌─────────────────┐
+│  FastAPI    │ ──────────────────────▶│   PostgreSQL    │
+│  Backend    │ ◀──────────────────────│   Database      │
+└──────┬──────┘                        └─────────────────┘
+│ REST + WebSocket
+▼
+┌─────────────┐
+│    React    │
+│  Dashboard  │
+└─────────────┘
 ---
 
 ## 🚀 Getting Started
@@ -106,38 +153,39 @@ http://localhost:5173
 | `GET` | `/api/v1/interfaces` | List available network interfaces |
 | `WS` | `/api/v1/ws/alerts` | WebSocket for real-time alerts |
 
-Full interactive docs available at `http://localhost:8001/docs`
+> 📖 Full interactive docs at `http://localhost:8001/docs`
 
 ---
 
-## 🔍 How It Works
+## 🔍 Detection Engine
 
-### ARP Scanning
-Scapy sends ARP broadcast packets to the entire subnet. Every device that responds is recorded with its IP, MAC address, vendor, and hostname.
+### Unauthorized Device Detection
+Every device starts as **unauthorized**. Any new MAC address triggers an instant WebSocket alert to the dashboard.
 
-### Zero Trust Model
-Every device starts as **unauthorized**. The administrator must explicitly whitelist each device. Any new device triggers an instant alert via WebSocket.
+### Anomaly Detection Rules
 
-### Anomaly Detection
-The detector engine monitors for:
-- 🔴 **Unauthorized devices** — MAC not in whitelist
-- 🟠 **Suspicious ports** — access to ports like 4444, 23, 3389
-- 🟡 **Traffic floods** — more than 500 packets/min from one IP
+| Type | Trigger | Severity |
+|------|---------|----------|
+| Unauthorized device | MAC not in whitelist | 🔴 High |
+| Suspicious port access | Ports: 4444, 31337 (metasploit) | 🔴 Critical |
+| Suspicious port access | Ports: 22, 23, 3389, 5900 | 🟠 Medium |
+| Traffic flood | >500 packets/min from one IP | 🟠 High |
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Packet Capture | Scapy 2.5 |
-| Backend | FastAPI + Uvicorn |
-| Database | PostgreSQL 15 + SQLAlchemy |
-| Real-time | WebSockets |
-| Frontend | React 18 + TypeScript |
-| Charts | Recharts |
-| Icons | Lucide React |
-| Container | Docker Compose |
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| Packet Capture | Scapy 2.5 | ARP scanning & traffic analysis |
+| Backend Framework | FastAPI + Uvicorn | REST API & WebSocket server |
+| ORM | SQLAlchemy 2.0 | Database models & queries |
+| Database | PostgreSQL 15 | Persistent storage |
+| Frontend | React 18 + TypeScript | Dashboard UI |
+| Build Tool | Vite 5 | Frontend bundler |
+| Charts | Recharts | Traffic visualization |
+| Icons | Lucide React | UI icons |
+| Container | Docker Compose | PostgreSQL deployment |
 
 ---
 
@@ -150,3 +198,9 @@ This tool is intended for **authorized network monitoring only**. Only use it on
 ## 📄 License
 
 MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+Made with ❤️ for cybersecurity portfolio
+</div>

@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+
+  # ─── Base de datos PostgreSQL ───────────────────────────────
+  db:
+    image: postgres:15
+    container_name: zerotrust_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: zerotrust
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  # ─── Backend FastAPI ────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: zerotrust_backend
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/zerotrust
+      NETWORK_RANGE: ${NETWORK_RANGE:-192.168.1.0/24}
+      NETWORK_INTERFACE: ${NETWORK_INTERFACE:-eth0}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+    network_mode: host  # Necesario para que Scapy acceda a la red real
+    restart: unless-stopped
+    cap_add:
+      - NET_ADMIN      # Permiso para capturar paquetes
+      - NET_RAW        # Permiso para paquetes ARP raw
+
+volumes:
+  postgres_data:

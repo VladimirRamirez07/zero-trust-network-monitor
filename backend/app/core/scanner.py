@@ -22,7 +22,7 @@ def get_mac_vendor(mac: str) -> str:
     except:
         return "Unknown"
 
-def scan_network(network: str = "192.168.1.0/24") -> list:
+def scan_network(network: str = "192.168.0.0/24") -> list:
     """
     Escanea la red usando ARP para descubrir dispositivos activos
     Requiere privilegios de administrador

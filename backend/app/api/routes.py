@@ -9,7 +9,18 @@ import json
 
 router = APIRouter()
 
+# ─── Dependency: sesión de base de datos ─────────────────────────────────────
+
+def get_db():
+    from app.core.database import SessionLocal
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
 # ─── Gestor de conexiones WebSocket activas ───────────────────────────────────
+
 class ConnectionManager:
     def __init__(self):
         self.active_connections: list[WebSocket] = []
@@ -35,17 +46,14 @@ manager = ConnectionManager()
 
 @router.get("/devices")
 def get_devices(db: Session = Depends(get_db)):
-    """Retorna todos los dispositivos detectados"""
     return db.query(Device).all()
 
 @router.get("/devices/unauthorized")
 def get_unauthorized(db: Session = Depends(get_db)):
-    """Retorna solo dispositivos NO autorizados"""
     return db.query(Device).filter(Device.is_authorized == False).all()
 
 @router.post("/devices/{mac}/authorize")
 def authorize_device(mac: str, db: Session = Depends(get_db)):
-    """Marca un dispositivo como autorizado"""
     device = db.query(Device).filter(Device.mac_address == mac).first()
     if not device:
         return {"error": "Dispositivo no encontrado"}
@@ -56,7 +64,6 @@ def authorize_device(mac: str, db: Session = Depends(get_db)):
 
 @router.post("/devices/{mac}/revoke")
 def revoke_device(mac: str, db: Session = Depends(get_db)):
-    """Revoca la autorización de un dispositivo"""
     device = db.query(Device).filter(Device.mac_address == mac).first()
     if not device:
         return {"error": "Dispositivo no encontrado"}
@@ -70,7 +77,6 @@ def revoke_device(mac: str, db: Session = Depends(get_db)):
 
 @router.post("/scan")
 async def trigger_scan(db: Session = Depends(get_db)):
-    """Lanza un escaneo ARP de la red y guarda resultados"""
     devices = scan_network()
     new_count = 0
 
@@ -83,8 +89,6 @@ async def trigger_scan(db: Session = Depends(get_db)):
             new_device = Device(**d)
             db.add(new_device)
             new_count += 1
-
-            # Notificar al dashboard en tiempo real
             await manager.broadcast({
                 "type": "new_device",
                 "data": d
@@ -104,12 +108,10 @@ async def trigger_scan(db: Session = Depends(get_db)):
 
 @router.get("/incidents")
 def get_incidents(db: Session = Depends(get_db)):
-    """Retorna todos los incidentes ordenados por fecha"""
     return db.query(Incident).order_by(Incident.created_at.desc()).all()
 
 @router.post("/incidents/{id}/resolve")
 def resolve_incident(id: int, db: Session = Depends(get_db)):
-    """Marca un incidente como resuelto"""
     incident = db.query(Incident).filter(Incident.id == id).first()
     if not incident:
         return {"error": "Incidente no encontrado"}
@@ -122,24 +124,9 @@ def resolve_incident(id: int, db: Session = Depends(get_db)):
 
 @router.websocket("/ws/alerts")
 async def websocket_alerts(websocket: WebSocket):
-    """
-    Canal WebSocket — el dashboard React se conecta aquí
-    para recibir alertas instantáneas sin polling
-    """
     await manager.connect(websocket)
     try:
         while True:
             await asyncio.sleep(1)
     except WebSocketDisconnect:
         manager.disconnect(websocket)
-
-
-# ─── Dependency: sesión de base de datos ─────────────────────────────────────
-
-def get_db():
-    from app.core.database import SessionLocal
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

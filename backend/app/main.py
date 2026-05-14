@@ -12,16 +12,21 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS para que React pueda conectarse al backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(router, prefix="/api/v1")
+
+@app.on_event("startup")
+def startup_event():
+    from app.core.database import init_db
+    init_db()
+    print("✅ Tablas creadas en PostgreSQL")
 
 @app.get("/")
 def root():

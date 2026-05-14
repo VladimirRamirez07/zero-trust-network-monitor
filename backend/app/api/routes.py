@@ -9,8 +9,6 @@ import json
 
 router = APIRouter()
 
-# ─── Dependency: sesión de base de datos ─────────────────────────────────────
-
 def get_db():
     from app.core.database import SessionLocal
     db = SessionLocal()
@@ -18,8 +16,6 @@ def get_db():
         yield db
     finally:
         db.close()
-
-# ─── Gestor de conexiones WebSocket activas ───────────────────────────────────
 
 class ConnectionManager:
     def __init__(self):
@@ -40,6 +36,23 @@ class ConnectionManager:
                 pass
 
 manager = ConnectionManager()
+
+
+# ─── Interfaces de red ────────────────────────────────────────────────────────
+
+@router.get("/interfaces")
+def get_interfaces():
+    """Retorna las interfaces de red disponibles"""
+    from scapy.all import get_if_list, get_if_addr
+    interfaces = []
+    for iface in get_if_list():
+        try:
+            ip = get_if_addr(iface)
+            if ip and ip != "0.0.0.0":
+                interfaces.append({"name": iface, "ip": ip})
+        except:
+            pass
+    return interfaces
 
 
 # ─── Endpoints de Dispositivos ────────────────────────────────────────────────
@@ -76,8 +89,11 @@ def revoke_device(mac: str, db: Session = Depends(get_db)):
 # ─── Endpoints de Escaneo ─────────────────────────────────────────────────────
 
 @router.post("/scan")
-async def trigger_scan(db: Session = Depends(get_db)):
-    devices = scan_network()
+async def trigger_scan(
+    network: str = "192.168.0.0/24",
+    db: Session = Depends(get_db)
+):
+    devices = scan_network(network)
     new_count = 0
 
     for d in devices:
@@ -120,7 +136,7 @@ def resolve_incident(id: int, db: Session = Depends(get_db)):
     return {"status": "resuelto", "id": id}
 
 
-# ─── WebSocket para alertas en tiempo real ───────────────────────────────────
+# ─── WebSocket ────────────────────────────────────────────────────────────────
 
 @router.websocket("/ws/alerts")
 async def websocket_alerts(websocket: WebSocket):

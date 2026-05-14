@@ -46,6 +46,7 @@ const styles: Record<string, React.CSSProperties> = {
   badge: { padding: '2px 8px', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' },
   alertCard: { background: colors.card, borderRadius: '12px', padding: '16px', border: `1px solid #92400e` },
   alertTitle: { fontSize: '16px', fontWeight: '600', marginBottom: '12px', color: colors.yellow },
+  select: { background: '#1f2937', color: 'white', border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '10px 12px', fontSize: '13px', cursor: 'pointer' },
 }
 
 interface Device {
@@ -68,6 +69,11 @@ interface Incident {
   created_at: string
 }
 
+interface NetworkInterface {
+  name: string
+  ip: string
+}
+
 const severityColors: Record<string, string> = {
   critical: '#dc2626',
   high: '#ea580c',
@@ -81,11 +87,14 @@ export default function App() {
   const [trafficData, setTrafficData] = useState<{ time: string; packets: number }[]>([])
   const [scanning, setScanning] = useState(false)
   const [alerts, setAlerts] = useState<string[]>([])
+  const [interfaces, setInterfaces] = useState<NetworkInterface[]>([])
+  const [selectedNetwork, setSelectedNetwork] = useState('192.168.0.0/24')
   const wsRef = useRef<WebSocket | null>(null)
 
   useEffect(() => {
     fetchDevices()
     fetchIncidents()
+    fetchInterfaces()
     connectWebSocket()
     return () => wsRef.current?.close()
   }, [])
@@ -101,6 +110,13 @@ export default function App() {
     try {
       const res = await axios.get(`${API}/incidents`)
       setIncidents(res.data)
+    } catch { }
+  }
+
+  const fetchInterfaces = async () => {
+    try {
+      const res = await axios.get(`${API}/interfaces`)
+      setInterfaces(res.data)
     } catch { }
   }
 
@@ -121,7 +137,7 @@ export default function App() {
   const handleScan = async () => {
     setScanning(true)
     try {
-      const res = await axios.post(`${API}/scan`)
+      const res = await axios.post(`${API}/scan?network=${selectedNetwork}`)
       setAlerts(prev => [`✅ Escaneo completado: ${res.data.new_devices} nuevos dispositivos`, ...prev.slice(0, 4)])
       fetchDevices()
     } catch {
@@ -164,10 +180,29 @@ export default function App() {
             <p style={styles.subtitle}>Monitoreo en tiempo real de tu red LAN</p>
           </div>
         </div>
-        <button style={styles.scanBtn} onClick={handleScan} disabled={scanning}>
-          <RefreshCw size={16} style={{ animation: scanning ? 'spin 1s linear infinite' : 'none' }} />
-          {scanning ? 'Escaneando...' : 'Escanear Red'}
-        </button>
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <select
+            value={selectedNetwork}
+            onChange={(e) => setSelectedNetwork(e.target.value)}
+            style={styles.select}
+          >
+            <option value="192.168.0.0/24">Wi-Fi (192.168.0.0/24)</option>
+            <option value="192.168.56.0/24">Ethernet 2 (192.168.56.0/24)</option>
+            <option value="172.31.80.0/24">WSL (172.31.80.0/24)</option>
+            {interfaces.map(iface => (
+              <option
+                key={iface.name}
+                value={`${iface.ip.split('.').slice(0, 3).join('.')}.0/24`}
+              >
+                {iface.name} ({iface.ip})
+              </option>
+            ))}
+          </select>
+          <button style={styles.scanBtn} onClick={handleScan} disabled={scanning}>
+            <RefreshCw size={16} />
+            {scanning ? 'Escaneando...' : 'Escanear Red'}
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

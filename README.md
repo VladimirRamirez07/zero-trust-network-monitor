@@ -153,7 +153,7 @@ http://localhost:5173
 ## 🔍 Detection Engine
 
 ### Unauthorized Device Detection
-Every device starts as **unauthorized**. Any new MAC address triggers an instant WebSocket alert to the dashboard.
+Every device starts as **unauthorized**. Any new MAC address triggers an instant WebSocket alert to the dashboard
 
 ### Anomaly Detection Rules
 

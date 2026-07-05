@@ -200,7 +200,7 @@ export default function App() {
           </select>
           <button style={styles.scanBtn} onClick={handleScan} disabled={scanning}>
             <RefreshCw size={16} />
-            {scanning ? 'Escaneando...' : 'Escanear Red'}
+            {scanning ? 'Escaneando la red...' : 'Escanear Red'}
           </button>
         </div>
       </div>
